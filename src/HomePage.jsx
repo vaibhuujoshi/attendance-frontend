@@ -154,7 +154,7 @@ function HomePage() {
       />
       </main>
       <header>
-        <h1 className="text-2xl">📘 Attendance Tracker</h1>
+        <h1 className="text-2xl font-bold stroke-yellow-500">📘 Attendance Tracker</h1>
         <p>Personal College Attendance Dashboard</p>
       </header>
 
