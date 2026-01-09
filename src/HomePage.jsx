@@ -56,7 +56,7 @@ function HomePage() {
   } finally {
     setLoading(false);
   }
-}
+  }
 
 
 
@@ -67,43 +67,44 @@ function HomePage() {
   const percentage =
     totalDays === 0 ? 0 : ((presentDays / totalDays) * 100).toFixed(2);
 
- useEffect(()=>{
-  if(totalDays == 0){
-    return
-  }
-  if(percentage < 80){
-    setAlert({
-      severity:"error",
-      message:`Attendace Below 80% (${percentage}) !!!!!!!!!!!`,
-      show: true
-    })
-  }else if(percentage < 85){
-    setAlert({
-      severity:"warning",
-      message:`Attendance below 85% (${percentage}) . Imporve it!!`,
-      show:true
-    })
-  }else if(percentage < 90){
-    setAlert({
-      severity:"info",
-      message:`Attendance Below 90 % (${percentage}) `,
-      show:true
-    })
-  }else if(percentage >= 90 ){
-    setAlert({
-      severity: "success",
-      message:`attendace above 90% (${percentage}) ...... Great👍`,
-      show:true
-    })
-  }else{
-    setAlert({
-      severity:"success",
-      message:"",
-      show:true
+  useEffect(()=>{
+    if(totalDays == 0){
+      return
+    }
+    if(percentage < 80){
+      setAlert({
+        severity:"error",
+        message:`Attendace Below 80%: (${percentage}) !!!!!!!!!!!`,
+        show: true
+      })
+    }else if(percentage < 85){
+      setAlert({
+        severity:"warning",
+        message:`Attendance below 85%: (${percentage}) . Imporve it!!`,
+        show:true
+      })
+    }else if(percentage < 90){
+      setAlert({
+        severity:"info",
+        message:`Attendance Below 90 %: (${percentage}) `,
+        show:true
+      })
+    }else if(percentage >= 90 ){
+      setAlert({
+        severity: "success",
+        message:`Attendace is above 90%: (${percentage}) ...... Great👍`,
+        show:true
+      })
+    }else{
+      setAlert({
+        severity:"success",
+        message:"",
+        show:true
 
-    })
-  }  
- },[percentage,totalDays])
+      })
+    }  
+  },[percentage,totalDays])
+
 
   function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString("en-IN", {
@@ -153,7 +154,7 @@ function HomePage() {
       />
       </main>
       <header>
-        <h1>📘 Attendance Tracker</h1>
+        <h1 className="text-2xl">📘 Attendance Tracker</h1>
         <p>Personal College Attendance Dashboard</p>
       </header>
 
