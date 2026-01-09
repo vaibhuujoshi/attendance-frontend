@@ -55,6 +55,48 @@ header {
 .highlight {
     background-color: #302e2e;
 }
+/* Ai  */
+
+.ai-section{
+  border: 2px solid;
+  max-height: 400px ;
+  max-width:300px;
+  padding:20px;
+  padding-top: 20px ;
+  text-align: center;
+  overflow-x: auto;
+  font-size: large;
+  background-color: rgb(71, 66, 66);
+  border-radius: 20px;
+  margin: auto;
+}
+
+
+.table-controls {
+  margin-bottom: 12px;
+}
+
+.toggle-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background-color: #222;
+  color: white;
+  margin: auto;
+}
+
+.table-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.filter-select {
+  padding: 6px;
+  border-radius: 6px;
+}
+
 
 /* Table */
 .table-section h2 {
@@ -68,6 +110,11 @@ table {
     border-radius: 10px;
     overflow: hidden;
     color: #151414;
+    margin:20px
+}
+
+.table-controls{
+    margin: auto;
 }
 
 th, td {
@@ -106,4 +153,7 @@ footer {
     padding: 15px;
     margin-top: 30px;
     color: #555;
+}
+a{
+    color:#555;
 }
