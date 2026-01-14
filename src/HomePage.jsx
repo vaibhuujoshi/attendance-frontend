@@ -176,7 +176,7 @@ function HomePage() {
   return (
     <>
     <main>
-      <h1 className="text-2xl font-bold stroke-yellow-500 bg-blue-300 rounded-full p-3 m-3">📘 Attendance Tracker</h1>
+      <h1 className="text-2xl font-bold stroke-yellow-500 bg-blue-300 rounded-full p-16 m-3">📘 Attendance Tracker</h1>
       <TelegramLogin/>    
     </main>   
     <main className="container alert">

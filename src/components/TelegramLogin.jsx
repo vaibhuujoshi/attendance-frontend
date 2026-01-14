@@ -28,7 +28,7 @@ function TelegramLogin() {
     script.async = true;
 
     // Telegram widget configuration
-    script.setAttribute("data-telegram-login", "attendance_login_bot");
+    script.setAttribute("data-telegram-login", "Attendance009bot");
     script.setAttribute("data-size", "large");
     script.setAttribute("data-userpic", "true");
     script.setAttribute("data-request-access", "write");
