@@ -4,6 +4,11 @@ import ActionAlerts from "./components/ActionAlerts";
 import TelegramLogin from "./components/TelegramLogin";
 
 import MonthlyCalendar from "./components/MonthlyCalendar";
+const userId = localStorage.getItem("userId");
+const token = localStorage.getItem("token");
+
+
+
 
 function getMonthYear(dateString) {
   return new Date(dateString).toLocaleDateString("en-IN", {
@@ -24,9 +29,14 @@ function HomePage() {
   message: "",
   severity: "success" // success | error | warning | info
   });
-  const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
-
+  if (!userId || !token) {
+    return (
+      <div className="login-container">
+        <h2>Login with Telegram</h2>
+        <TelegramLogin />
+      </div>
+    );
+  }
 
   if (!userId || !token) {
     return (
@@ -177,7 +187,15 @@ function HomePage() {
     <>
     <main>
       <h1 className="text-2xl font-bold stroke-yellow-500 bg-blue-300 rounded-full p-16 m-3">📘 Attendance Tracker</h1>
-      <TelegramLogin/>    
+      <a
+        href="https://t.me/Attendance009bot?start=login"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold mx-auto"
+      >
+        Login with Telegram
+      </a>
+    
     </main>   
     <main className="container alert">
     <ActionAlerts
