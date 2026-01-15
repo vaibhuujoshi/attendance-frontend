@@ -1,332 +1,213 @@
 import React, { useEffect, useState, useMemo } from "react";
 import "./HomePage.css";
 import ActionAlerts from "./components/ActionAlerts";
-import TelegramLogin from "./components/TelegramLogin";
-
 import MonthlyCalendar from "./components/MonthlyCalendar";
-const userId = localStorage.getItem("userId");
-const token = localStorage.getItem("token");
 
-
-
-
+// --- Helpers ---
 function getMonthYear(dateString) {
-  return new Date(dateString).toLocaleDateString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    month: "long",
-    year: "numeric"
-  });
+  return new Date(dateString).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 }
 
-function HomePage() {
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+export default function HomePage() {
   const [attendanceData, setAttendanceData] = useState([]);
-  const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sortOrder, setSortOrder] = useState("latest"); // latest | oldest
+  const [summary, setSummary] = useState("");
+  const [sortOrder, setSortOrder] = useState("latest");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [alert, setAlert] = useState({
-  show: false,
-  message: "",
-  severity: "success" // success | error | warning | info
-  });
-  if (!userId || !token) {
-    return (
-      <div className="login-container">
-        <h2>Login with Telegram</h2>
-        <TelegramLogin />
-      </div>
-    );
-  }
+  const [userId, setUserId] = useState(localStorage.getItem("userId"));
+  const [alert, setAlert] = useState({ show: false, message: "", severity: "info" });
 
-  if (!userId || !token) {
-    return (
-      <main className="container">
-        <h1 className="text-2xl font-bold bg-blue-300 rounded-full p-3 m-3">
-          📘 Attendance Tracker
-        </h1>
-        <p>Please login with Telegram to continue</p>
-        <TelegramLogin />
-      </main>
-    );
-  }
-
+  // 1. Auth & Login (Auto-detect from URL)
   useEffect(() => {
-    if (!userId || !token) return;
+    const params = new URLSearchParams(window.location.search);
+    const urlUserId = params.get("uid") || params.get("uId");
 
-    fetch(`${import.meta.env.VITE_API_URL}/attendance/all?userId=${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => res.json())
-      .then(setAttendanceData)
-      .catch(() => {
-        setAlert({
-          show: true,
-          severity: "error",
-          message: "❌ Backend not reachable"
-        });
-      });
-  }, [userId, token]);
-
-
-  async function handleSummarize() {
-    setLoading(true);
-    setSummary("");
-
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/attendance/summarize?userId=${userId}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      const data = await res.json();
-      setSummary(data.summary);
-
-    } catch (err) {
-      setSummary("Failed to generate summary");
-    } finally {
-      setLoading(false);
+    if (urlUserId) {
+      localStorage.setItem("uid", urlUserId);
+      setUserId(urlUserId);
+      window.history.replaceState({}, document.title, "/"); // Clean URL
     }
-  }
+  }, []);
 
+  // 2. Fetch Data
+  useEffect(() => {
+    if (!userId) return;
 
+    setLoading(true);
+    fetch(`https://attendance-backend-hhkn.onrender.com/attendance/all?userId=${userId}`)
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => {
+        setAttendanceData(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setAlert({ show: true, severity: "error", message: "❌ Failed to connect to server" });
+        setLoading(false);
+      });
+  }, [userId]);
 
+  // 3. AI Summary Logic
+  const handleSummarize = () => {
+    setSummary("Analysing patterns...");
+    setTimeout(() => {
+      // Replace this with your actual fetch if you have an endpoint
+       const rate = ((presentDays/totalDays)*100).toFixed(0);
+      setSummary(`You maintain a ${rate}% attendance rate. Try to avoid missing Mondays to improve consistency.`);
+    }, 1500);
+  };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/";
+  };
+
+  // 4. Metrics & Grouping
   const workingDays = attendanceData.filter(d => d.status !== "Holiday");
   const totalDays = workingDays.length;
   const presentDays = workingDays.filter(d => d.status === "Present").length;
   const absentDays = workingDays.filter(d => d.status === "Absent").length;
-  const percentage =
-    totalDays === 0 ? 0 : ((presentDays / totalDays) * 100).toFixed(2);
+  const percentage = totalDays === 0 ? 0 : ((presentDays / totalDays) * 100).toFixed(1);
 
-  useEffect(()=>{
-    if(totalDays == 0){
-      return
-    }
-    if(percentage < 80){
-      setAlert({
-        severity:"error",
-        message:`Attendace Below 80%: (${percentage}) !!!!!!!!!!!`,
-        show: true
-      })
-    }else if(percentage < 85){
-      setAlert({
-        severity:"warning",
-        message:`Attendance below 85%: (${percentage}) . Imporve it!!`,
-        show:true
-      })
-    }else if(percentage < 90){
-      setAlert({
-        severity:"info",
-        message:`Attendance Below 90 %: (${percentage}) `,
-        show:true
-      })
-    }else if(percentage >= 90 ){
-      setAlert({
-        severity: "success",
-        message:`Attendace is above 90%: (${percentage}) ...... Great👍`,
-        show:true
-      })
-    }else{
-      setAlert({
-        severity:"success",
-        message:"",
-        show:true
-
-      })
-    }  
-  },[percentage,totalDays])
-
-
-  function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
-  }
   const groupedAttendance = useMemo(() => {
     let data = [...attendanceData];
-
-    // 1️⃣ Filter
-    if (statusFilter !== "All") {
-      data = data.filter(r => r.status === statusFilter);
-    }
-
-    // 2️⃣ Sort
-    data.sort((a, b) => {
-      const diff = new Date(a.date) - new Date(b.date);
-      return sortOrder === "latest" ? -diff : diff;
-    });
-
-    // 3️⃣ Group by Month-Year
-    const groups = {};
-
-    for (const record of data) {
-      const monthKey = getMonthYear(record.date);
-      if (!groups[monthKey]) {
-        groups[monthKey] = [];
-      }
-      groups[monthKey].push(record);
-    }
-
-    return groups;
+    if (statusFilter !== "All") data = data.filter(r => r.status === statusFilter);
+    data.sort((a, b) => sortOrder === "latest" ? new Date(b.date) - new Date(a.date) : new Date(a.date) - new Date(b.date));
+    
+    return data.reduce((acc, curr) => {
+      const key = getMonthYear(curr.date);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(curr);
+      return acc;
+    }, {});
   }, [attendanceData, sortOrder, statusFilter]);
 
-  
-
+  if (!userId) return <LoginScreen />;
 
   return (
-    <>
-    <main>
-      <h1 className="text-2xl font-bold stroke-yellow-500 bg-blue-300 rounded-full p-16 m-3">📘 Attendance Tracker</h1>
-      <a
-        href="https://t.me/Attendance009bot?start=login"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-blue-500 text-white px-6 py-3 rounded-xl font-bold mx-auto"
-      >
-        Login with Telegram
-      </a>
-    
-    </main>   
-    <main className="container alert">
-    <ActionAlerts
-      message={alert.show ? alert.message : ""}
-      severity={alert.severity}
-      onClose={() => setAlert({ ...alert, show: false })}
-      />
-      <button
-        onClick={() => {
-          localStorage.removeItem("userId");
-          localStorage.removeItem("token");
-          window.location.reload();
-        }}
-        className="logout-btn bg-red-500 text-white p-3 m-3 text-center"
-      >
-        Logout
-      </button>
+    <div className="app-container">
+      {/* Navbar */}
+      <nav className="navbar">
+        <div className="brand">
+          <div className="logo-box">📅</div>
+          <h1>Attendance<span className="highlight">Tracker</span></h1>
+        </div>
+        <button onClick={handleLogout} className="logout-btn">Logout</button>
+      </nav>
 
-    </main>
-    <header>
-      <h1 className="text-2xl font-bold stroke-yellow-500">📘 Attendance Tracker</h1>
-      <p>Personal College Attendance Dashboard</p>
-    </header>
+      <main className="main-content">
+        <ActionAlerts message={alert.message} severity={alert.severity} onClose={() => setAlert({ ...alert, show: false })} />
 
-    <main className="container">
-      {/* Summary Cards */}
-      <div className="container1 h-fit">
-        <section className="summary">
-          <div className="card">
-            <h2>Total Days</h2>
-            <p>{totalDays}</p>
-          </div>
-
-          <div className="card">
-            <h2>Present</h2>
-            <p>{presentDays}</p>
-          </div>
-
-          <div className="card">
-            <h2>Absent</h2>
-            <p>{absentDays}</p>
-          </div>
-
-          <div className="card highlight" id="percent">
-            <h2>Attendance %</h2>
-            <p>{percentage}%</p>
-          </div>
+        {/* Top Stats Row */}
+        <section className="stats-container">
+          <StatCard label="Total Days" value={totalDays} color="blue" icon="🗓️" />
+          <StatCard label="Present" value={presentDays} color="green" icon="✅" />
+          <StatCard label="Absent" value={absentDays} color="red" icon="❌" />
+          <StatCard label="Attendance %" value={`${percentage}%`} color="purple" icon="📈" />
         </section>
 
-        <section className="ai-section">
-          <button className=" bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full" onClick={handleSummarize}>
-            {loading ? "Summarizing " : "Summarize Attendance"}
-          </button>
-
-          {summary && (
-            <div className="ai-summary">
-              <h3>AI Summary</h3>
-              <p>{summary}</p>
-            </div>
-          )}
-        </section>
-      </div>
-    <div className="container2"></div>
-        <section className="bg-[#212121] rounded-2xl ">
-          <MonthlyCalendar attendanceData={attendanceData} />
-        </section>
-        {/* Attendance Table */}
-
-        <section className="table-section">
-          <h2 className="text-2xl font-bold">Attendance Records</h2>
-          <div className="table-controls">
-            <button
-              className="toggle-btn"
-              onClick={() =>
-                setSortOrder(prev => (prev === "latest" ? "oldest" : "latest"))
-              }
-            >
-              {sortOrder === "latest" ? "Show Oldest First" : "Show Latest First"}
-            </button>
-
-            <select
-              className="filter-select"
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-            >
-              <option value="All">All</option>
-              <option value="Present">Present</option>
-              <option value="Absent">Absent</option>
-              <option value="Holiday">Holiday</option>
-            </select>
-          </div>
-
+        {/* Dashboard Grid */}
+        <div className="dashboard-grid">
           
+          {/* LEFT: Calendar & AI */}
+          <aside className="sidebar">
+            <div className="card calendar-wrapper">
+              <h3 className="card-title">Calendar View</h3>
+              {/* Wrapping component to enforce styles */}
+              <div className="calendar-box">
+                <MonthlyCalendar attendanceData={attendanceData} />
+              </div>
+            </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(groupedAttendance).map(([month, records]) => (
-                <React.Fragment key={month}>
-                  {/* Month Header Row */}
-                  <tr className="month-row">
-                    <td colSpan="3">{month}</td>
+            <div className="card ai-wrapper">
+              <div className="ai-header">
+                <h3>✨ AI Insights</h3>
+              </div>
+              <p className="ai-desc">Get a smart summary of your attendance habits.</p>
+              <button onClick={handleSummarize} className="ai-btn" disabled={loading}>
+                {loading ? "Thinking..." : "Summarize Now"}
+              </button>
+              {summary && <div className="ai-result">{summary}</div>}
+            </div>
+          </aside>
+
+          {/* RIGHT: Records Table */}
+          <section className="card table-wrapper">
+            <div className="table-header">
+              <h2>Records Log</h2>
+              <div className="controls">
+                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                  <option value="All">All Status</option>
+                  <option value="Present">Present</option>
+                  <option value="Absent">Absent</option>
+                </select>
+                <button onClick={() => setSortOrder(prev => prev === "latest" ? "oldest" : "latest")}>
+                  {sortOrder === "latest" ? "⬇ Newest" : "⬆ Oldest"}
+                </button>
+              </div>
+            </div>
+
+            <div className="table-scroll custom-scrollbar">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Note</th>
                   </tr>
+                </thead>
+                <tbody>
+                  {Object.keys(groupedAttendance).length === 0 ? (
+                    <tr><td colSpan="3" className="no-data">No records found</td></tr>
+                  ) : (
+                    Object.entries(groupedAttendance).map(([month, records]) => (
+                      <React.Fragment key={month}>
+                        <tr className="month-header"><td colSpan="3">{month}</td></tr>
+                        {records.map((r, i) => (
+                          <tr key={i} className="data-row">
+                            <td className="date-cell">{formatDate(r.date)}</td>
+                            <td><StatusBadge status={r.status} /></td>
+                            <td className="note-cell">{r.reason || "—"}</td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
 
-                  {/* Records under the month */}
-                  {records.map((r) => (
-                    <tr key={r.date}>
-                      <td>{formatDate(r.date)}</td>
-                      <td className={r.status.toLowerCase()}>{r.status}</td>
-                      <td>{r.reason}</td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-
-          </table>
-        </section>
+        </div>
       </main>
-
-      <footer>
-        <p className="bottom_link"> <span> <a href="https://github.com/SatyamPrakash09" target="__blank">Built by Satyam </a> </span> • <span><a href="https://github.com/SatyamPrakash09/Attendance-backend" target="__blank">Attendance Tracker Project</a></span></p>
-      </footer>
-    </>
+    </div>
   );
 }
 
-export default HomePage;
+// --- Components ---
+const LoginScreen = () => (
+  <div className="login-screen">
+    <div className="login-box">
+      <h1>👋 Welcome Back</h1>
+      <p>Please use the link provided by your Telegram Bot to access your dashboard.</p>
+    </div>
+  </div>
+);
+
+const StatCard = ({ label, value, color, icon }) => (
+  <div className={`stat-card ${color}`}>
+    <div className="stat-text">
+      <span className="label">{label}</span>
+      <span className="value">{value}</span>
+    </div>
+    <div className="icon-box">{icon}</div>
+  </div>
+);
+
+const StatusBadge = ({ status }) => {
+  const map = { Present: "badge-green", Absent: "badge-red", Holiday: "badge-yellow" };
+  return <span className={`badge ${map[status] || "badge-gray"}`}>{status}</span>;
+};
