@@ -1,5 +1,5 @@
 import * as React from "react";
-import dayjs from "dayjs";
+// import dayjs from "dayjs";
 import GlobalStyles from '@mui/material/GlobalStyles';
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -36,15 +36,12 @@ export default function AttendanceCalendar({ attendanceData }) {
           color: bg ? "white" : "white",
           fontSize:15,
           margin:"2px",
+          borderRadius:"10px",
           fontStyle:"bold",
           "&:hover": {
             backgroundColor: bg || "#e0e0e0",
             color:"black",
-          },
-            "& .MuiDayCalendar-header > span": {
-                color: "white !important",
-                fontWeight: "bold",
-            }
+          }
         }}
       />
     );

@@ -105,9 +105,9 @@ export default function HomePage() {
     totalDays === 0 ? "0.0" : ((presentDays / totalDays) * 100).toFixed(1);
 
   
-  let userName = "Testing";
+  let userName = "User";
   if (workingDays.length > 0){
-    userName = workingDays[0]?.name|| "Testing";
+    userName = workingDays[0]?.name|| "User";
   }
 
   /* =================================================
