@@ -221,7 +221,7 @@ export default function HomePage() {
               <span className="text-gray-500 text-sm font-medium">V 1.0</span>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-100 tracking-tight wrap-break-words">
-              THE YEAR <span className="text-[#22D3EE]">2026</span>
+              THE YEAR <span className="text-[#22D3EE]">{new Date().getFullYear()}</span>
             </h1>
             <p className="text-gray-400 mt-2 font-medium max-w-xl text-sm md:text-base">
               An efficient web-telegram-based attendance tracker featuring dynamic status cards and visual data summaries to help students manage academic records.
